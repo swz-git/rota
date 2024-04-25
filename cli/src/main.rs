@@ -39,7 +39,8 @@ fn main() -> Result<(), Box<dyn Error>> {
         sender.send(line)?;
     }
     let read_time_taken = Instant::now().duration_since(before_read);
-    // close?
+
+    // close channel --> threads quit
     drop(sender);
 
     let before_wait = Instant::now();
@@ -51,13 +52,17 @@ fn main() -> Result<(), Box<dyn Error>> {
         vec.push(item);
     }
 
+    let before_sort = Instant::now();
+    // TODO: is sorting on insertion faster? (since were already read limited 99% of the time)
     vec.sort_by_cached_key(|x| x.1);
+    let sort_time_taken = Instant::now().duration_since(before_sort);
 
     for (line, _) in vec.iter().rev() {
         println!("{line}");
     }
     eprintln!("read took {read_time_taken:?}");
-    eprintln!("threads took {}µs", wait_time_taken.as_micros());
+    eprintln!("threads took {wait_time_taken:?}");
+    eprintln!("sort took {sort_time_taken:?}");
 
     Ok(())
 }
